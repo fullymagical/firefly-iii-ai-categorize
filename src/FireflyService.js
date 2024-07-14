@@ -1,90 +1,103 @@
-import {getConfigVariable} from "./util.js";
+import { getConfigVariable } from "./util.js";
 
 export default class FireflyService {
-    #BASE_URL;
-    #PERSONAL_TOKEN;
+  #BASE_URL;
+  #PERSONAL_TOKEN;
 
-    constructor() {
-        this.#BASE_URL = getConfigVariable("FIREFLY_URL")
-        if (this.#BASE_URL.slice(-1) === "/") {
-            this.#BASE_URL = this.#BASE_URL.substring(0, this.#BASE_URL.length - 1)
-        }
-
-        this.#PERSONAL_TOKEN = getConfigVariable("FIREFLY_PERSONAL_TOKEN")
+  constructor() {
+    this.#BASE_URL = getConfigVariable("FIREFLY_URL");
+    if (this.#BASE_URL.slice(-1) === "/") {
+      this.#BASE_URL = this.#BASE_URL.substring(0, this.#BASE_URL.length - 1);
     }
 
-    async getCategories() {
-        const response = await fetch(`${this.#BASE_URL}/api/v1/categories`, {
-            headers: {
-                Authorization: `Bearer ${this.#PERSONAL_TOKEN}`,
-            }
-        });
+    this.#PERSONAL_TOKEN = getConfigVariable("FIREFLY_PERSONAL_TOKEN");
+  }
 
-        if (!response.ok) {
-            throw new FireflyException(response.status, response, await response.text())
-        }
+  async getCategories() {
+    const response = await fetch(`${this.#BASE_URL}/api/v1/categories`, {
+      headers: {
+        Authorization: `Bearer ${this.#PERSONAL_TOKEN}`,
+      },
+    });
 
-        const data = await response.json();
-
-        const categories = new Map();
-        data.data.forEach(category => {
-            categories.set(category.attributes.name, category.id);
-        });
-
-        return categories;
+    if (!response.ok) {
+      throw new FireflyException(
+        response.status,
+        response,
+        await response.text()
+      );
     }
 
-    async setCategory(transactionId, transactions, categoryId) {
-        const tag = getConfigVariable("FIREFLY_TAG", "AI categorized");
+    const data = await response.json();
 
-        const body = {
-            apply_rules: true,
-            fire_webhooks: true,
-            transactions: [],
-        }
+    const categories = new Map();
+    data.data.forEach((category) => {
+      categories.set(category.attributes.name, category.id);
+    });
 
-        transactions.forEach(transaction => {
-            let tags = transaction.tags;
-            if (!tags) {
-                tags = [];
-            }
-            tags.push(tag);
+    return categories;
+  }
 
-            body.transactions.push({
-                transaction_journal_id: transaction.transaction_journal_id,
-                category_id: categoryId,
-                tags: tags,
-            });
-        })
+  async setCategory(transactionId, transactions, categoryId) {
+    const tag = getConfigVariable("FIREFLY_TAG", "AI categorized");
 
-        const response = await fetch(`${this.#BASE_URL}/api/v1/transactions/${transactionId}`, {
-            method: "PUT",
-            headers: {
-                Authorization: `Bearer ${this.#PERSONAL_TOKEN}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body)
-        });
+    const body = {
+      apply_rules: true,
+      fire_webhooks: true,
+      transactions: [],
+    };
 
-        if (!response.ok) {
-            throw new FireflyException(response.status, response, await response.text())
-        }
+    transactions.forEach((transaction) => {
+      let tags = transaction.tags;
+      if (!tags) {
+        tags = [];
+      }
+      tags.push(tag);
 
-        await response.json();
-        console.info("Transaction updated")
+      body.transactions.push({
+        transaction_journal_id: transaction.transaction_journal_id,
+        category_id: categoryId,
+        tags: tags,
+      });
+    });
+
+    const response = await fetch(
+      `${this.#BASE_URL}/api/v1/transactions/${transactionId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${this.#PERSONAL_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!response.ok) {
+      throw new FireflyException(
+        response.status,
+        response,
+        await response.text()
+      );
     }
+
+    await response.json();
+    console.info("Transaction updated");
+  }
 }
 
 class FireflyException extends Error {
-    code;
-    response;
-    body;
+  code;
+  response;
+  body;
 
-    constructor(statusCode, response, body) {
-        super(`Error while communicating with Firefly III: ${statusCode} - ${body}`);
+  constructor(statusCode, response, body) {
+    super(
+      `Error while communicating with Firefly III: ${statusCode} - ${body}`
+    );
 
-        this.code = statusCode;
-        this.response = response;
-        this.body = body;
-    }
+    this.code = statusCode;
+    this.response = response;
+    this.body = body;
+  }
 }

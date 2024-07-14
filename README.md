@@ -3,19 +3,18 @@
 This project allows you to automatically categorize your expenses in [Firefly III](https://www.firefly-iii.org/) by
 using OpenAI.
 
-## Please fork me
-Unfortunately i am not able to invest more time into maintaining this project. 
+## Additional features :
 
-Feel free to fork it and create a PR that adds a link to your fork in the README file.
+- Added support for GrokAI
 
 ## How it works
 
 It provides a webhook that you can set up to be called every time a new expense is added.
 
-It will then generate a prompt for OpenAI, including your existing categories, the recipient and the description of the
+It will then generate a prompt for AI, including your existing categories, the recipient and the description of the
 transaction.
 
-OpenAI will, based on that prompt, guess the category for the transaction.
+AI will, based on that prompt, guess the category for the transaction.
 
 If it is one of your existing categories, the tool will set the category on the transaction and also add a tag to the
 transaction.
@@ -24,7 +23,7 @@ If it cannot detect the category, it will not update anything.
 
 ## Privacy
 
-Please note that some details of the transactions will be sent to OpenAI as information to guess the category.
+Please note that some details of the transactions will be sent to AI as information to guess the category.
 
 These are:
 
@@ -152,7 +151,9 @@ If you have to run the application on a different port than the default port `30
 
 - `FIREFLY_URL`: The URL to your Firefly III instance. Example: `https://firefly.example.com`. (required)
 - `FIREFLY_PERSONAL_TOKEN`: A Firefly III Personal Access Token. (required)
-- `OPENAI_API_KEY`: The OpenAI API Key to authenticate against OpenAI. (required)
+- `AI_API_KEY`: The AI API Key to authenticate against The chosen AI. (required)
 - `ENABLE_UI`: If the user interface should be enabled. (Default: `false`)
 - `FIREFLY_TAG`: The tag to assign to the processed transactions. (Default: `AI categorized`)
 - `PORT`: The port where the application listens. (Default: `3000`)
+- `AI_CHOICE` : The AI Service to use. Supports "OPENAI" or "GROKAI". (Default: `OPENAI`)
+
